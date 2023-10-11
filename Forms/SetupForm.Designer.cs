@@ -193,6 +193,8 @@
             ShowIcon = false;
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Окно калибровки";
+            FormClosing += SetupForm_FormClosing;
+            Load += SetupForm_Load;
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ResumeLayout(false);

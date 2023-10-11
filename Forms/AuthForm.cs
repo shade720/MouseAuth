@@ -1,48 +1,52 @@
-﻿using System.Text.Json;
+﻿using MouseAuth.BusinessLogicLayer;
 using MouseAuth.BusinessLogicLayer.Models;
 
 namespace MouseAuth.Forms;
 
 public partial class AuthForm : Form
 {
-    private readonly MouseUsageParameters _averageResult;
-    private readonly MouseUsageParameters _resultsSpread;
     private readonly TestForm _testForm;
+    private readonly MouseAuthentication _mouseAuthentication;
 
-    public AuthForm()
+    private const string MessageBoxSuccessText = "Вы успешно аутентифицированы!";
+    private const string MessageBoxFailedText = "Аутентификация провалена!";
+
+    public AuthForm(TestForm testForm, MouseAuthentication mouseAuthentication)
     {
         InitializeComponent();
-        _testForm = new TestForm();
-        _testForm.TopLevel = false;
-        _testForm.AutoScroll = true;
+        _testForm = testForm;
+        _mouseAuthentication = mouseAuthentication;
         Canvas.Controls.Add(_testForm);
+    }
+
+    private void AuthForm_Load(object sender, EventArgs e)
+    {
         _testForm.Show();
         _testForm.OnTestCompleted += OnTestCompleted;
-        _averageResult = JsonSerializer.Deserialize<MouseUsageParameters>(File.ReadAllText(Program.AverageResultsFilepath))!;
-        _resultsSpread = JsonSerializer.Deserialize<MouseUsageParameters>(File.ReadAllText(Program.ResultsSpreadFilepath))!;
     }
+
+    private void AuthForm_FormClosing(object sender, FormClosingEventArgs e)
+    {
+        _testForm.OnTestCompleted -= OnTestCompleted;
+    }
+
 
     private void OnTestCompleted(MouseUsageParameters result)
     {
-        const string messageBoxSuccessText = "Вы успешно аутентифицированы!";
-        const string messageBoxFailedText = "Аутентификация провалена!";
         StartTest.Visible = true;
         StopTest.Visible = false;
-        MessageBox.Show(IsLegitUser(result) ? messageBoxSuccessText : messageBoxFailedText, @"Тест завершен!");
-    }
 
+        var isTestPassedSuccess = _mouseAuthentication.Authenticate(result);
 
-    private bool IsLegitUser(MouseUsageParameters results)
-    {
-        if (Math.Abs(_averageResult.AverageDistance - results.AverageDistance) > _resultsSpread.AverageDistance) return false;
-        if (Math.Abs(_averageResult.AverageMovementTime - results.AverageMovementTime) > _resultsSpread.AverageMovementTime) return false;
-        if (Math.Abs(_averageResult.AveragePressTime - results.AveragePressTime) > _resultsSpread.AveragePressTime) return false;
-        if (Math.Abs(_averageResult.AverageSpeed - results.AverageSpeed) > _resultsSpread.AverageSpeed) return false;
-        if (Math.Abs(_averageResult.ClickFrequency - results.ClickFrequency) > _resultsSpread.ClickFrequency) return false;
-        if (Math.Abs(_averageResult.MinSpeed - results.MinSpeed) > _resultsSpread.MinSpeed) return false;
-        if (Math.Abs(_averageResult.MaxSpeed - results.MaxSpeed) > _resultsSpread.MaxSpeed) return false;
-        if (Math.Abs(_averageResult.PressingDelayAverageTime - results.PressingDelayAverageTime) > _resultsSpread.PressingDelayAverageTime) return false;
-        return true;
+        var message = isTestPassedSuccess
+            ? MessageBoxSuccessText
+            : MessageBoxFailedText;
+
+        MessageBox.Show(message, @"Тест завершен!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        if (!isTestPassedSuccess)
+            return;
+        DialogResult = DialogResult.OK;
+        Close();
     }
 
     private void StartTest_Click(object sender, EventArgs e)
@@ -56,11 +60,6 @@ public partial class AuthForm : Form
     {
         StartTest.Visible = true;
         StopTest.Visible = false;
-        _testForm.StopTest(false);
-    }
-
-    private void AuthForm_FormClosed(object sender, FormClosedEventArgs e)
-    {
-        Application.ExitThread();
+        _testForm.StopTest();
     }
 }

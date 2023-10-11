@@ -1,78 +1,37 @@
-﻿using System.Text.Json;
+﻿using MouseAuth.BusinessLogicLayer;
 using MouseAuth.BusinessLogicLayer.Models;
+using MouseAuth.BusinessLogicLayer.Models.Abstractions;
 
 namespace MouseAuth.Forms;
 
 public partial class SetupForm : Form
 {
     private readonly TestForm _testForm;
-    private readonly List<MouseUsageParameters> _testResults;
+    private readonly IFormFactory _formFactory;
+    private readonly CalibrationManager _calibrationManager;
 
-    /// <summary>
-    /// Число тестов, которые предстоит пройти для калибровки.
-    /// </summary>
-    private const int TestsCount = 3;
-
-    public SetupForm()
+    public SetupForm(
+        TestForm testForm,
+        IFormFactory formFactory,
+        CalibrationManager calibrationManager)
     {
         InitializeComponent();
-        _testResults = new List<MouseUsageParameters>();
-        _testForm = new TestForm();
-        _testForm.TopLevel = false;
-        _testForm.AutoScroll = true;
+        _calibrationManager = calibrationManager;
+        _testForm = testForm;
+        _formFactory = formFactory;
         Canvas.Controls.Add(_testForm);
+    }
+
+    private void SetupForm_Load(object sender, EventArgs e)
+    {
         _testForm.Show();
         _testForm.OnTestCompleted += OnTestCompleted;
-        TestsCountLabel.Text = TestsCount.ToString();
+        TestsCountLabel.Text = _calibrationManager.TestsToPass.ToString();
     }
 
-    private MouseUsageParameters GetAverageResult() => new()
+    private void SetupForm_FormClosing(object sender, FormClosingEventArgs e)
     {
-        AverageDistance = _testResults.Average(x => x.AverageDistance),
-        AverageMovementTime = _testResults.Average(x => x.AverageMovementTime),
-        AveragePressTime = _testResults.Average(x => x.AveragePressTime),
-        AverageSpeed = _testResults.Average(x => x.AverageSpeed),
-        ClickFrequency = _testResults.Average(x => x.ClickFrequency),
-        MaxSpeed = _testResults.Average(x => x.MaxSpeed),
-        MinSpeed = _testResults.Average(x => x.MinSpeed),
-        PressingDelayAverageTime = _testResults.Average(x => x.PressingDelayAverageTime),
-    };
-    private MouseUsageParameters GetResultsSpread() => new()
-    {
-        AverageDistance = _testResults.Max(x => x.AverageDistance) - _testResults.Min(x => x.AverageDistance),
-        AverageMovementTime = _testResults.Max(x => x.AverageMovementTime) - _testResults.Min(x => x.AverageMovementTime),
-        AveragePressTime = _testResults.Max(x => x.AveragePressTime) - _testResults.Min(x => x.AveragePressTime),
-        AverageSpeed = _testResults.Max(x => x.AverageSpeed) - _testResults.Min(x => x.AverageSpeed),
-        ClickFrequency = _testResults.Max(x => x.ClickFrequency) - _testResults.Min(x => x.ClickFrequency),
-        MaxSpeed = _testResults.Max(x => x.MaxSpeed) - _testResults.Min(x => x.MaxSpeed),
-        MinSpeed = _testResults.Max(x => x.MinSpeed) - _testResults.Min(x => x.MinSpeed),
-        PressingDelayAverageTime = _testResults.Max(x => x.PressingDelayAverageTime) - _testResults.Min(x => x.PressingDelayAverageTime),
-    };
-
-    private void OnTestCompleted(MouseUsageParameters result)
-    {
-        _testResults.Add(result);
-        TestingPartLabel.Text = (_testResults.Count + 1).ToString();
-        StartTest.Visible = true;
-        StopTest.Visible = false;
-        if (_testResults.Count < TestsCount)
-            return;
-        SaveResults();
-        new AuthForm().Show();
-        Hide();
-    }
-
-    private void SaveResults()
-    {
-        var averageResult = GetAverageResult();
-        var resultsSpread = GetResultsSpread();
-        File.WriteAllText(Program.AverageResultsFilepath, JsonSerializer.Serialize(averageResult));
-        File.WriteAllText(Program.ResultsSpreadFilepath, JsonSerializer.Serialize(resultsSpread));
-        const string beginningText = "Параметры использования мыши сгенерированы. Данные сохранены и будут использованы для дальнейший аутентификации.";
-        var parametersText =
-            $"AverageDistance: {averageResult.AverageDistance}\r\nAverageMovementTime: {averageResult.AverageMovementTime}\r\nAveragePressTime: {averageResult.AveragePressTime}\r\nMinSpeed: {averageResult.MinSpeed}\r\nAverageSpeed: {averageResult.AverageSpeed}\r\n MaxSpeed: {averageResult.MaxSpeed}\r\nClickFrequency: {averageResult.ClickFrequency}\r\nPressingDelayAverageTime: {averageResult.PressingDelayAverageTime}\r\n";
-        var endText = $"Параметры сохранены в:\r\n{Program.AverageResultsFilepath}\r\n{Program.ResultsSpreadFilepath}";
-        MessageBox.Show(string.Join("\r\n", beginningText, parametersText, endText), @"Тест завершен!");
+        _testForm.OnTestCompleted -= OnTestCompleted;
     }
 
     private void StartTest_Click(object sender, EventArgs e)
@@ -86,12 +45,36 @@ public partial class SetupForm : Form
     {
         StartTest.Visible = true;
         StopTest.Visible = false;
-        _testForm.StopTest(false);
+        _testForm.StopTest();
     }
 
     private void OptionsLinkLabel_MouseClick(object sender, MouseEventArgs e)
     {
-        var optionsForm = new OptionsForm();
-        optionsForm.Show();
+        _formFactory.CreateOptionsForm().Show();
+    }
+
+    private void OnTestCompleted(MouseUsageParameters parameters)
+    {
+        _calibrationManager.RegisterTestResults(parameters);
+        TestingPartLabel.Text = (_calibrationManager.TestsPassed + 1).ToString();
+        StartTest.Visible = true;
+        StopTest.Visible = false;
+
+        if (!_calibrationManager.IsCalibrationPassed)
+            return;
+
+        var calibrationResults = _calibrationManager.GetCalibrationResults();
+        _calibrationManager.SaveCalibrationResults(calibrationResults);
+        ShowResultsToUser(calibrationResults);
+        Close();
+    }
+
+    private static void ShowResultsToUser(CalibrationResults calibrationResults)
+    {
+        const string beginningText = "Параметры использования мыши сгенерированы. Данные сохранены и будут использованы для дальнейший аутентификации.";
+        var parametersText =
+            $"AverageDistance: {calibrationResults.AverageParameters.AverageDistance}\r\nAverageMovementTime: {calibrationResults.AverageParameters.AverageMovementTime}\r\nAveragePressTime: {calibrationResults.AverageParameters.AveragePressTime}\r\nMinSpeed: {calibrationResults.AverageParameters.MinSpeed}\r\nAverageSpeed: {calibrationResults.AverageParameters.AverageSpeed}\r\n MaxSpeed: {calibrationResults.AverageParameters.MaxSpeed}\r\nClickFrequency: {calibrationResults.AverageParameters.ClickFrequency}\r\nPressingDelayAverageTime: {calibrationResults.AverageParameters.PressingDelayAverageTime}\r\n";
+        //var endText = $"Параметры сохранены в:\r\n{Program.AverageResultsFilepath}\r\n{Program.ResultsSpreadFilepath}";
+        MessageBox.Show(string.Join("\r\n", beginningText, parametersText/*, endText*/), @"Тест завершен!");
     }
 }

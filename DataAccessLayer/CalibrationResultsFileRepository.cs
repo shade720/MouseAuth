@@ -34,8 +34,8 @@ internal class CalibrationResultsFileRepository : ICalibrationResultsRepository
 
     public void SaveCalibrationResults(CalibrationResults calibrationResults)
     {
-        File.WriteAllText(Program.AverageResultsFilepath, JsonSerializer.Serialize(_averageResultsFilepath));
-        File.WriteAllText(Program.ResultsSpreadFilepath, JsonSerializer.Serialize(_resultsSpreadFilepath));
+        File.WriteAllText(_averageResultsFilepath, JsonSerializer.Serialize(calibrationResults.AverageParameters));
+        File.WriteAllText(_resultsSpreadFilepath, JsonSerializer.Serialize(calibrationResults.ParametersSpread));
     }
 
     public void DeleteCalibrationResults()

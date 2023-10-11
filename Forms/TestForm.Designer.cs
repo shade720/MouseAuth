@@ -48,9 +48,10 @@
             Button1.FlatAppearance.MouseOverBackColor = Color.Transparent;
             Button1.FlatStyle = FlatStyle.Flat;
             Button1.Font = new Font("Century Gothic", 10.2F, FontStyle.Regular, GraphicsUnit.Point);
-            Button1.Location = new Point(19, 133);
+            Button1.Location = new Point(17, 100);
+            Button1.Margin = new Padding(3, 2, 3, 2);
             Button1.Name = "Button1";
-            Button1.Size = new Size(50, 50);
+            Button1.Size = new Size(44, 38);
             Button1.TabIndex = 1;
             Button1.UseVisualStyleBackColor = false;
             Button1.Click += Button1_Click;
@@ -70,9 +71,10 @@
             Button2.FlatStyle = FlatStyle.Flat;
             Button2.Font = new Font("Century Gothic", 10.2F, FontStyle.Regular, GraphicsUnit.Point);
             Button2.ForeColor = SystemColors.ControlText;
-            Button2.Location = new Point(71, 241);
+            Button2.Location = new Point(62, 181);
+            Button2.Margin = new Padding(3, 2, 3, 2);
             Button2.Name = "Button2";
-            Button2.Size = new Size(50, 50);
+            Button2.Size = new Size(44, 38);
             Button2.TabIndex = 2;
             Button2.UseVisualStyleBackColor = false;
             Button2.Click += Button2_Click;
@@ -91,9 +93,10 @@
             Button3.FlatAppearance.MouseOverBackColor = Color.Transparent;
             Button3.FlatStyle = FlatStyle.Flat;
             Button3.Font = new Font("Century Gothic", 10.2F, FontStyle.Regular, GraphicsUnit.Point);
-            Button3.Location = new Point(202, 241);
+            Button3.Location = new Point(177, 181);
+            Button3.Margin = new Padding(3, 2, 3, 2);
             Button3.Name = "Button3";
-            Button3.Size = new Size(50, 50);
+            Button3.Size = new Size(44, 38);
             Button3.TabIndex = 3;
             Button3.UseVisualStyleBackColor = false;
             Button3.Click += Button3_Click;
@@ -112,9 +115,10 @@
             Button4.FlatAppearance.MouseOverBackColor = Color.Transparent;
             Button4.FlatStyle = FlatStyle.Flat;
             Button4.Font = new Font("Century Gothic", 10.2F, FontStyle.Regular, GraphicsUnit.Point);
-            Button4.Location = new Point(250, 133);
+            Button4.Location = new Point(219, 100);
+            Button4.Margin = new Padding(3, 2, 3, 2);
             Button4.Name = "Button4";
-            Button4.Size = new Size(50, 50);
+            Button4.Size = new Size(44, 38);
             Button4.TabIndex = 4;
             Button4.UseVisualStyleBackColor = false;
             Button4.Click += Button4_Click;
@@ -133,9 +137,10 @@
             Button5.FlatAppearance.MouseOverBackColor = Color.Transparent;
             Button5.FlatStyle = FlatStyle.Flat;
             Button5.Font = new Font("Century Gothic", 10.2F, FontStyle.Regular, GraphicsUnit.Point);
-            Button5.Location = new Point(136, 32);
+            Button5.Location = new Point(119, 24);
+            Button5.Margin = new Padding(3, 2, 3, 2);
             Button5.Name = "Button5";
-            Button5.Size = new Size(50, 50);
+            Button5.Size = new Size(44, 38);
             Button5.TabIndex = 5;
             Button5.UseVisualStyleBackColor = false;
             Button5.Click += Button5_Click;
@@ -146,19 +151,19 @@
             // TimerLabel
             // 
             TimerLabel.Font = new Font("Century Gothic", 12F, FontStyle.Regular, GraphicsUnit.Point);
-            TimerLabel.Location = new Point(136, 144);
+            TimerLabel.Location = new Point(119, 108);
             TimerLabel.Name = "TimerLabel";
-            TimerLabel.Size = new Size(56, 48);
+            TimerLabel.Size = new Size(49, 36);
             TimerLabel.TabIndex = 8;
             TimerLabel.Text = "10";
             TimerLabel.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // TestForm
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
-            ClientSize = new Size(321, 325);
+            ClientSize = new Size(281, 244);
             Controls.Add(TimerLabel);
             Controls.Add(Button5);
             Controls.Add(Button4);
@@ -166,7 +171,10 @@
             Controls.Add(Button2);
             Controls.Add(Button1);
             FormBorderStyle = FormBorderStyle.None;
+            Margin = new Padding(3, 2, 3, 2);
             Name = "TestForm";
+            FormClosing += TestForm_FormClosing;
+            Load += TestForm_Load;
             MouseMove += MainForm_MouseMove;
             ResumeLayout(false);
         }

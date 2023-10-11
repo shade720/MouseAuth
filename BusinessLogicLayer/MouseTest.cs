@@ -6,12 +6,14 @@ namespace MouseAuth.BusinessLogicLayer;
 public class MouseTest
 {
     private readonly int _buttonsCount;
-    private readonly int _duration;
+    public int Duration { get; }
 
-    public MouseTest(int buttonsCount, int duration)
+    public MouseTest(
+        int buttonsCount, 
+        int duration)
     {
         _buttonsCount = buttonsCount;
-        _duration = duration;
+        Duration = duration;
         _testTimer.Interval = 1000;
         _testTimer.Tick += TestTimerOnTick;
     }
@@ -23,23 +25,26 @@ public class MouseTest
     /// событие завершения теста, на которое подписываются клиенты класса и узнают результаты теста.
     /// </summary>
 
-    public delegate void TestCompleted(MouseUsageParameters result);
-    public event TestCompleted? OnTestCompleted;
+    public delegate void OnTestCompleted(MouseUsageParameters result);
+    public event OnTestCompleted? OnTestCompletedEvent;
+
+    public delegate void OnTimerTick (int currentSecond);
+    public event OnTimerTick? OnTimerTickEvent;
 
     public void StartTest()
     {
         _testTimer.Enabled = true;
         _testTimer.Start();
-        _currentTimeSeconds = _duration;
+        _currentTimeSeconds = Duration;
         _isTestRunning = true;
         _clickCount = 0;
     }
 
-    public void StopTest(bool isSaveNeeded)
+    public void StopTest()
     {
         _testTimer.Stop();
         _testTimer.Enabled = false;
-        _currentTimeSeconds = _duration;
+        _currentTimeSeconds = Duration;
         _isTestRunning = false;
 
         if (_distancesBetweenClicks.Count == 0 ||
@@ -47,22 +52,8 @@ public class MouseTest
             _pressingTimeList.Count == 0 ||
             _speedsBetweenClicks.Count == 0 ||
             _delayBetweenEnterAndClick.Count == 0) return;
+
         _speedsBetweenClicks.RemoveAll(x => x == 0);
-
-        var result = new MouseUsageParameters
-        {
-            AverageDistance = _distancesBetweenClicks.Average(),
-            AverageMovementTime = _movementTimeList.Skip(1).Average(),
-            AveragePressTime = _pressingTimeList.Average(),
-            AverageSpeed = _speedsBetweenClicks.Skip(1).Average(),
-            ClickFrequency = _clickCount / (double)_duration,
-            MaxSpeed = _speedsBetweenClicks.Skip(1).Max(),
-            MinSpeed = _speedsBetweenClicks.Skip(1).Min(),
-            PressingDelayAverageTime = _delayBetweenEnterAndClick.Average()
-        };
-        if (isSaveNeeded)
-            OnTestCompleted?.Invoke(result);
-
         _distancesBetweenClicks.Clear();
         _movementTimeList.Clear();
         _delayBetweenEnterAndClick.Clear();
@@ -86,7 +77,40 @@ public class MouseTest
     {
         _currentTimeSeconds--;
         if (_currentTimeSeconds == 0)
-            StopTest(true);
+        {
+            var result = new MouseUsageParameters
+            {
+                AverageDistance = _distancesBetweenClicks.Average(),
+                AverageMovementTime = _movementTimeList.Skip(1).Average(),
+                AveragePressTime = _pressingTimeList.Average(),
+                AverageSpeed = _speedsBetweenClicks.Skip(1).Average(),
+                ClickFrequency = _clickCount / (double)Duration,
+                MaxSpeed = _speedsBetweenClicks.Skip(1).Max(),
+                MinSpeed = _speedsBetweenClicks.Skip(1).Min(),
+                PressingDelayAverageTime = _delayBetweenEnterAndClick.Average()
+            };
+            OnTestCompletedEvent?.Invoke(result);
+        }
+        OnTimerTickEvent?.Invoke(_currentTimeSeconds);
+    }
+
+    #endregion
+
+    #region GetNextButtonIndex
+
+    public int? GetNextButtonIndex(int currentButtonIndex)
+    {
+        if (!_isTestRunning)
+            return null;
+        return RandomNumber(currentButtonIndex);
+    }
+
+    private int RandomNumber(int except)
+    {
+        var range = Enumerable.Range(0, _buttonsCount).Where(i => except != i);
+        var rand = new Random();
+        var index = rand.Next(0, _buttonsCount - 1);
+        return range.ElementAt(index);
     }
 
     #endregion
@@ -104,25 +128,16 @@ public class MouseTest
     private readonly System.Diagnostics.Stopwatch _timeBetweenClicks = new();
     private int _clickCount;
 
-    public int RegisterClick(int buttonNum)
+    public void RegisterClick()
     {
         if (!_isTestRunning)
-            return 0;
+            return;
         var distance = EvaluateDistance();
         _speedsBetweenClicks.Add(Math.Sqrt(distance) / (_timeBetweenClicks.ElapsedMilliseconds / (double)1000));
         _movementTimeList.Add(_timeBetweenClicks.ElapsedMilliseconds / (double)1000);
         _timeBetweenClicks.Restart();
         PressingSensor();
         _clickCount++;
-        return RandomNumber(buttonNum);
-    }
-
-    private int RandomNumber(int except)
-    {
-        var range = Enumerable.Range(0, _buttonsCount).Where(i => except != i);
-        var rand = new Random();
-        var index = rand.Next(0, _buttonsCount - 1);
-        return range.ElementAt(index);
     }
 
     #endregion

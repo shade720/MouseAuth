@@ -1,8 +1,8 @@
 ﻿namespace MouseAuth.BusinessLogicLayer.Models.Abstractions;
 
-internal interface IOptionsRepository
+public interface IOptionsRepository
 {
-    public Options ReadOptions();
+    public Options? ReadOptions();
     public void WriteOptions(Options options);
-    public void DeleteOptions(Options options);
+    public void DeleteOptions();
 }

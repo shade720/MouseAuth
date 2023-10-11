@@ -31,7 +31,7 @@
             groupBox1 = new GroupBox();
             label2 = new Label();
             label1 = new Label();
-            comboBox1 = new ComboBox();
+            ReverificationPeriodComboBox = new ComboBox();
             SaveOptionsButton = new Button();
             groupBox1.SuspendLayout();
             SuspendLayout();
@@ -40,7 +40,7 @@
             // 
             groupBox1.Controls.Add(label2);
             groupBox1.Controls.Add(label1);
-            groupBox1.Controls.Add(comboBox1);
+            groupBox1.Controls.Add(ReverificationPeriodComboBox);
             groupBox1.Font = new Font("Century Gothic", 12F, FontStyle.Regular, GraphicsUnit.Point);
             groupBox1.Location = new Point(12, 12);
             groupBox1.Name = "groupBox1";
@@ -69,16 +69,16 @@
             label1.TabIndex = 1;
             label1.Text = "Интервал повторной проверки";
             // 
-            // comboBox1
+            // ReverificationPeriodComboBox
             // 
-            comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox1.Font = new Font("Century Gothic", 9.75F, FontStyle.Regular, GraphicsUnit.Point);
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Items.AddRange(new object[] { "1", "3", "5", "10", "15", "20", "30", "45", "60", "90", "180" });
-            comboBox1.Location = new Point(227, 39);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(64, 25);
-            comboBox1.TabIndex = 0;
+            ReverificationPeriodComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            ReverificationPeriodComboBox.Font = new Font("Century Gothic", 9.75F, FontStyle.Regular, GraphicsUnit.Point);
+            ReverificationPeriodComboBox.FormattingEnabled = true;
+            ReverificationPeriodComboBox.Items.AddRange(new object[] { "1", "3", "5", "10", "15", "20", "30", "45", "60", "90", "180" });
+            ReverificationPeriodComboBox.Location = new Point(227, 39);
+            ReverificationPeriodComboBox.Name = "ReverificationPeriodComboBox";
+            ReverificationPeriodComboBox.Size = new Size(64, 25);
+            ReverificationPeriodComboBox.TabIndex = 0;
             // 
             // SaveOptionsButton
             // 
@@ -91,6 +91,7 @@
             SaveOptionsButton.TabIndex = 4;
             SaveOptionsButton.Text = "Сохранить";
             SaveOptionsButton.UseVisualStyleBackColor = true;
+            SaveOptionsButton.Click += SaveOptionsButton_Click;
             // 
             // OptionsForm
             // 
@@ -105,6 +106,7 @@
             ShowIcon = false;
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Опции тестирования";
+            Load += OptionsForm_Load;
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             ResumeLayout(false);
@@ -114,7 +116,7 @@
 
         private GroupBox groupBox1;
         private Label label1;
-        private ComboBox comboBox1;
+        private ComboBox ReverificationPeriodComboBox;
         private Button SaveOptionsButton;
         private Label label2;
     }

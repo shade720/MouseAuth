@@ -1,40 +1,56 @@
+using Microsoft.Extensions.Hosting;
 using MouseAuth.Forms;
+using Microsoft.Extensions.DependencyInjection;
+using MouseAuth.BusinessLogicLayer;
+using MouseAuth.BusinessLogicLayer.Models.Abstractions;
+using MouseAuth.DataAccessLayer;
 
 namespace MouseAuth;
 
 internal static class Program
 {
+    public static IServiceProvider ServiceProvider { get; private set; }
     private static readonly string StoragePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-    public static readonly string AverageResultsFilepath = Path.Combine(StoragePath, "average-results.json");
-    public static readonly string ResultsSpreadFilepath = Path.Combine(StoragePath, "results-spread.json");
 
     [STAThread]
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
-        var form = SelectStartForm();
-        if (form is null) 
-            return;
-        Application.Run(form);
+        var host = CreateHostBuilder().Build();
+        ServiceProvider = host.Services;
+        Application.Run(ServiceProvider.GetRequiredService<ControlForm>());
     }
 
-    private static Form? SelectStartForm()
+    private static IHostBuilder CreateHostBuilder()
     {
-        if (IsSetupNeeded())
-            return new SetupForm();
-        var dialogResult = MessageBox.Show(@"Удалить сохраненные биометрические данные?", @"Отладка", MessageBoxButtons.YesNoCancel);
-        if (dialogResult == DialogResult.Yes)
-        {
-            File.Delete(AverageResultsFilepath);
-            File.Delete(ResultsSpreadFilepath);
-            return new SetupForm();
-        }
-        if (dialogResult == DialogResult.No) 
-            return new AuthForm();
-        return null;
-    }
-    private static bool IsSetupNeeded()
-    {
-        return !File.Exists(AverageResultsFilepath) || !File.Exists(ResultsSpreadFilepath);
+        return Host.CreateDefaultBuilder()
+            .ConfigureServices((context, services) =>
+            {
+                services.AddTransient<IFormFactory, ServiceProviderFormFactory>();
+
+                services.AddTransient<IOptionsRepository, OptionsFileRepository>(
+                    _ => new OptionsFileRepository(StoragePath));
+                services.AddTransient<ICalibrationResultsRepository, CalibrationResultsFileRepository>(
+                    _ => new CalibrationResultsFileRepository(StoragePath));
+                services.AddTransient(
+                    _ => new MouseTest(5, 10));
+                services.AddTransient(
+                    serviceProvider => new CalibrationManager(3, serviceProvider.GetRequiredService<ICalibrationResultsRepository>()));
+                services.AddTransient<MouseAuthentication>();
+
+                services.AddTransient<SetupForm>();
+                services.AddTransient<AuthForm>();
+                services.AddTransient<OptionsForm>();
+
+                services.AddTransient(serviceProvider =>
+                {
+                    var testForm = new TestForm(serviceProvider.GetRequiredService<MouseTest>());
+                    testForm.TopLevel = false;
+                    testForm.AutoScroll = false;
+                    return testForm;
+                });
+
+                services.AddTransient<ControlForm>();
+            });
     }
 }
