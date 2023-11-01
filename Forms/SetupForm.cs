@@ -63,10 +63,12 @@ public partial class SetupForm : Form
         if (!_calibrationManager.IsCalibrationPassed)
             return;
 
+        TestingPartLabel.Text = _calibrationManager.TestsToPass.ToString();
         var calibrationResults = _calibrationManager.GetCalibrationResults();
         _calibrationManager.SaveCalibrationResults(calibrationResults);
         ShowResultsToUser(calibrationResults);
         Close();
+        DialogResult = DialogResult.OK;
     }
 
     private static void ShowResultsToUser(CalibrationResults calibrationResults)

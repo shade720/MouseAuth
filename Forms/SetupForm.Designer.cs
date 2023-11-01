@@ -188,6 +188,7 @@
             Controls.Add(label1);
             Controls.Add(panel1);
             Controls.Add(StopTest);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
             Margin = new Padding(3, 2, 3, 2);
             Name = "SetupForm";
             ShowIcon = false;

@@ -46,7 +46,6 @@ public partial class AuthForm : Form
         if (!isTestPassedSuccess)
             return;
         DialogResult = DialogResult.OK;
-        Close();
     }
 
     private void StartTest_Click(object sender, EventArgs e)

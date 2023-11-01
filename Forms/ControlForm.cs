@@ -1,5 +1,4 @@
-﻿using System.Windows.Forms.VisualStyles;
-using MouseAuth.BusinessLogicLayer.Models.Abstractions;
+﻿using MouseAuth.BusinessLogicLayer.Models.Abstractions;
 
 namespace MouseAuth.Forms;
 
@@ -37,7 +36,12 @@ public partial class ControlForm : Form
     {
         if (_calibrationResultsRepository.ReadCalibrationResults() is null)
         {
-            _formFactory.CreateSetupForm().ShowDialog();
+            var dialogResult = _formFactory.CreateSetupForm().ShowDialog();
+            if (dialogResult != DialogResult.OK)
+            {
+                Application.Exit();
+                return;
+            }
         }
         else
         {
@@ -67,9 +71,11 @@ public partial class ControlForm : Form
             }
         }
 
+        var authForm = _formFactory.CreateAuthForm();
         while (!Worker.CancellationPending)
         {
-            var dialogResult = _formFactory.CreateAuthForm().ShowDialog();
+            var dialogResult = authForm.ShowDialog();
+            authForm.Hide();
             if (dialogResult != DialogResult.OK)
                 continue;
             Thread.Sleep(options!.ReverificationPeriodSeconds * 1000);
